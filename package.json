@@ -9,8 +9,9 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "cypress": "^15.1.0",
     "typescript": "^5.2.2",
-    "vite": "^5.0.8"
+    "vite": "^7.1.5"
   },
   "dependencies": {
     "axios": "^1.6.8"
