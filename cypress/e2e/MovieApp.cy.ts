@@ -1,6 +1,13 @@
 import Helpers from '../utilities/Helpers'
 
-const ouml = Helpers.HTMLEntity.decode('&ouml;')
+const ouml = Helpers.HTMLEntity.decode('&ouml;'), defaultIntercept = () => {
+    cy.intercept('GET', 'http://omdbapi.com/*', {
+        statusCode: 200  
+    })    
+}, searchForLotR = () => {
+    cy.get('#searchText').type('Lord of the Rings')
+    cy.get('#search').click()
+}
 
 describe('Movies App', () => {
     beforeEach(() => {
@@ -25,5 +32,13 @@ describe('Movies App', () => {
 
     it('should have a container for movies search results with id "movie-container" that is empty', () => {
         cy.get('#movie-container').children().should('have.length', 0)
+    })
+
+    it('should search for movies but find none and display a message accordingly', () => {
+        defaultIntercept()  
+
+        searchForLotR()
+
+        cy.get('#movie-container').should('have.length', 1).find('p').should('have.length', 1).and('have.text', `Inga s${ ouml }kresultat att visa`)
     })
 })
