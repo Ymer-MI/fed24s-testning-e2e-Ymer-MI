@@ -1,23 +1,46 @@
+import { movieSort } from './functions'
 import { IMovie } from './models/Movie'
 import { getData } from './services/movieService'
 
-let movies: IMovie[] = []
+const movieContainerID = 'movie-container'
+
+let movies: IMovie[] = [], sort = false
 
 export const init = () => {
-  let form = document.getElementById('searchForm') as HTMLFormElement
+  const form = document.getElementById('searchForm') as HTMLFormElement, sortID = 'sort', sortTag = document.createElement('select')
+
+  Object.assign(sortTag, {
+    id: sortID,
+    innerHTML: `
+      <option value="asc">A-&Ouml;</option>
+      <option value="desc">&Ouml;-A</option>
+    `
+  })
+
+  sortTag.addEventListener('change', (e: Event) => {
+    sort = (e.target as HTMLSelectElement).value === 'asc'
+
+    console.log(sort);
+    
+    createHtml(movies, Object.assign(document.getElementById(movieContainerID) as HTMLDivElement, {
+      innerHTML: ''
+    }))
+  })
+
   form.addEventListener('submit', (e: SubmitEvent) => {
     e.preventDefault()
     handleSubmit()
   })
+
+  form.append(Object.assign(document.createElement('label'), {
+    htmlFor: sortID,
+    innerHTML: 'Sortera: '
+  }), sortTag)
 }
 
 export async function handleSubmit() {
-  let searchText = (document.getElementById('searchText') as HTMLInputElement)
-    .value
+  let searchText = (document.getElementById('searchText') as HTMLInputElement).value, container = document.getElementById(movieContainerID) as HTMLDivElement
 
-  let container: HTMLDivElement = document.getElementById(
-    'movie-container'
-  ) as HTMLDivElement
   container.innerHTML = ''
 
   try {
@@ -34,6 +57,8 @@ export async function handleSubmit() {
 }
 
 export const createHtml = (movies: IMovie[], container: HTMLDivElement) => {
+  movieSort(movies, sort)
+
   for (let i = 0; i < movies.length; i++) {
     let movie = document.createElement('div')
     let title = document.createElement('h3')
