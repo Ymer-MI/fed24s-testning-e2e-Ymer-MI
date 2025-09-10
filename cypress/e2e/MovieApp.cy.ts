@@ -5,7 +5,13 @@ enum ID {
     SEARCH_FORM = 'searchForm',
     SEARCH_TEXT = 'searchText',
     SEARCH_BUTTON = 'search',
+    SEARCH_SORT = 'sort',
     MOVIE_CONTAINER = 'movie-container'
+}
+
+enum Titles {
+    A = 'The Lord of the Rings',
+    Z = 'The Lord of the Rings: The War of the Rohirrim'
 }
 
 const ouml = Helpers.HTMLEntity.decode('&ouml;'), API_URL = '**://omdbapi.com/*', errMSG = `Inga s${ ouml }kresultat att visa`, intercept = {
@@ -50,6 +56,13 @@ describe('Movie App', () => {
 
     it(`should have one button in the form of type submit with id "search" and text "S${ ouml }k"`, () => {
         cy.get(`#${ ID.SEARCH_FORM } button`).should('have.length', 1).and('have.id', ID.SEARCH_BUTTON).and('have.text', `S${ ouml }k`)
+    })
+
+    it(`should have one select tag in the form with id "${ ID.SEARCH_SORT }" and two options of "asc" & "desc"`, () => {
+        cy.get(`#${ ID.SEARCH_FORM } select`).should('have.length', 1).and('have.id', ID.SEARCH_SORT).children('option').should('have.length', 2).then(options => {
+            expect(options[0]).to.have.value('asc')
+            expect(options[1]).to.have.value('desc')
+        })
     })
 
     it('should have a container for movies search results with id "movie-container" that is empty', () => {
@@ -112,8 +125,25 @@ describe('Movie App', () => {
         checkForErrMsg()
     })
 
+    it('should sort the movies by title ascending by default', () => {
+        intercept.success('Lord_of_the_Rings.json')
+
+        searchForLotR()
+
+        cy.get(`#${ ID.MOVIE_CONTAINER } h3`).should('have.length.gt', 1).first().should('have.text', Titles.A).parent().parent().find('h3').last().should('have.text', Titles.Z)
+    })
+
+    it('should sort the movies by title descending when changing the sorting order', () => {
+        intercept.success('Lord_of_the_Rings.json')
+
+        searchForLotR()
+        cy.get(`#${ ID.SEARCH_SORT }`).select('desc')
+
+        cy.get(`#${ ID.MOVIE_CONTAINER } h3`).should('have.length.gt', 1).first().should('have.text', Titles.Z).parent().parent().find('h3').last().should('have.text', Titles.A)
+    })
+
     // Live tests to be uncommented/turned on later.
-    /* 
+    
     it('should search for movies and display 10 movie cards live', () => {
         searchForLotR()
 
@@ -131,5 +161,5 @@ describe('Movie App', () => {
 
         checkForErrMsg()
     })
-     */
+    
 })

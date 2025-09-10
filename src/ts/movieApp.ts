@@ -55,11 +55,7 @@ export async function handleSubmit() {
 }
 
 export const createHtml = (movies: IMovie[], container: HTMLDivElement) => {
-  console.log('movies before sort: ', movies)
-  
   movieSort(movies, sort)
-
-  console.log(sort, 'movies after sort: ', movies)
 
   for (let i = 0; i < movies.length; i++) {
     let movie = document.createElement('div')
