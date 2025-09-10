@@ -4,7 +4,7 @@ import { getData } from './services/movieService'
 
 const movieContainerID = 'movie-container'
 
-let movies: IMovie[] = [], sort = false
+let movies: IMovie[] = [], sort = true
 
 export const init = () => {
   const form = document.getElementById('searchForm') as HTMLFormElement, sortID = 'sort', sortTag = document.createElement('select')
@@ -19,8 +19,6 @@ export const init = () => {
 
   sortTag.addEventListener('change', (e: Event) => {
     sort = (e.target as HTMLSelectElement).value === 'asc'
-
-    console.log(sort);
     
     createHtml(movies, Object.assign(document.getElementById(movieContainerID) as HTMLDivElement, {
       innerHTML: ''
@@ -57,7 +55,11 @@ export async function handleSubmit() {
 }
 
 export const createHtml = (movies: IMovie[], container: HTMLDivElement) => {
+  console.log('movies before sort: ', movies)
+  
   movieSort(movies, sort)
+
+  console.log(sort, 'movies after sort: ', movies)
 
   for (let i = 0; i < movies.length; i++) {
     let movie = document.createElement('div')
