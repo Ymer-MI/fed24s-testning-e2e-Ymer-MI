@@ -1,3 +1,4 @@
+import { identity } from '../../node_modules/cypress/types/lodash/index'
 import Helpers from '../utilities/Helpers'
 
 enum ID {
@@ -7,26 +8,40 @@ enum ID {
     MOVIE_CONTAINER = 'movie-container'
 }
 
-const ouml = Helpers.HTMLEntity.decode('&ouml;'), API_URL = 'http://omdbapi.com/*', defaultIntercept = () => {
-    cy.intercept('GET', API_URL, {
-        statusCode: 200  
-    })    
+const ouml = Helpers.HTMLEntity.decode('&ouml;'), API_URL = '**://omdbapi.com/*', errMSG = `Inga s${ ouml }kresultat att visa`, intercept = {
+    default: () => {
+        intercept.success('empty_search.json')
+    },
+    success: (fixture: string) => {
+        intercept.custom(200, fixture)
+    },
+    custom: (statusCode: number, fixture: string) => {
+        cy.intercept('GET', API_URL, {
+            statusCode,
+            fixture
+        })
+    }
+}, longSearchText = 'fragment declared parabola scoop nuptials owl rupture bronzing scant mumbling partly preplan container gumming overact stout crewmate phrasing broadways frequency botany chlorine blatancy apply shallow retrial jailer decathlon suds routine proofing drift reabsorb requisite carnival vanquish undermine corrode defy zoom triage tragedy plow conch wildfire roman undying mower famished anyone reviver autograph sublevel tables flypaper untimed prewar tinsel reminder steadying phrase domain tinsmith reformat diary',
+fillSearchInput = (str: string) => {
+    cy.get(`#${ ID.SEARCH_TEXT }`).type(str)
 }, searchForLotR = () => {
-    cy.get(`#${ ID.SEARCH_TEXT }`).type('Lord of the Rings')
+    fillSearchInput('Lord of the Rings')
     cy.get(`#${ ID.SEARCH_BUTTON }`).click()
+}, checkForErrMsg = () => {
+    cy.get(`#${ ID.MOVIE_CONTAINER } p`).should('have.length', 1).and('have.text', errMSG)
 }
 
-describe('Movies App', () => {
+describe('Movie App', () => {
     beforeEach(() => {
         cy.visit('')
     })
 
-    it('should have corrct url', () => {
-        cy.url().should('equal', 'http://localhost:5173/')
+    it('should visit correct address', () => {
+        cy.url().should('eq', 'http://localhost:5173/')
     })
 
     it(`should have one form with id "${ ID.SEARCH_FORM }"`, () => {
-        cy.get('form').should('have.length', 1).and('not.have.length.lessThan', 1).and('not.have.length.greaterThan', 1).and('have.id', ID.SEARCH_FORM)
+        cy.get('form').should('have.length', 1).and('not.have.length.lt', 1).and('not.have.length.gt', 1).and('have.id', ID.SEARCH_FORM)
     })
 
     it('should have one input in the form of type text with id "searchText" and placeholder text without value', () => {
@@ -38,33 +53,83 @@ describe('Movies App', () => {
     })
 
     it('should have a container for movies search results with id "movie-container" that is empty', () => {
-        cy.get(`#${ ID.MOVIE_CONTAINER }`).children().should('have.length', 0)
+        cy.get(`#${ ID.MOVIE_CONTAINER }`).should('exist').children().should('have.length', 0)
     })
 
     it('should search for movies but find none and display a message accordingly', () => {
-        defaultIntercept()  
+        intercept.default()  
 
         searchForLotR()
 
-        cy.get(`#${ ID.MOVIE_CONTAINER }`).children().should('have.length', 1).parent().children('p').should('have.length', 1).and('have.text', `Inga s${ ouml }kresultat att visa`)
+        cy.get(`#${ ID.MOVIE_CONTAINER }`).children().should('have.length', 1).parent().children('p').should('have.length', 1).and('have.text', errMSG)
     })
 
     it('should search for movies and displa 10 movie cards', () => {
-        cy.intercept('GET', API_URL, {
-            statusCode: 200,
-            fixture: 'Lord_of_the_Rings.json'
-        })
+        intercept.success('Lord_of_the_Rings.json')
 
         searchForLotR()
 
         cy.get(`#${ ID.MOVIE_CONTAINER }`).children().should('have.length', 10)
     })
 
-    // Live tests to be uncommented/turned on later.
+    it('should fail gracefully if status code is 404', () => {
+        intercept.custom(404, 'Lord_of_the_Rings.json')
 
-    /* it('should search for movies and display 10 movie cards', () => {
+        searchForLotR()
+
+        checkForErrMsg()
+    })
+
+    it('should fail gracefully if API is down', () => {
+        intercept.custom(500, 'Lord_of_the_Rings.json')
+
+        searchForLotR()
+
+        checkForErrMsg()
+    })
+
+    it('should handle no search prop from API gracefully', () => {
+        intercept.success('Lord_of_the_Rings_noSearch.json')
+
+        searchForLotR()
+
+        checkForErrMsg()
+    })
+
+    it('should handle empty search strings', () => {
+        intercept.default()
+
+        fillSearchInput('{ENTER}')
+
+        checkForErrMsg()
+    })
+
+    it('should handle long search strings', () => {
+        intercept.success('empty_search.json')
+
+        fillSearchInput(`${ longSearchText }{ENTER}`)
+
+        checkForErrMsg()
+    })
+
+    // Live tests to be uncommented/turned on later.
+    /* 
+    it('should search for movies and display 10 movie cards live', () => {
         searchForLotR()
 
         cy.get(`#${ ID.MOVIE_CONTAINER }`).children().should('have.length', 10)
-    }) */
+    })
+
+    it('should handle empty search strings live', () => {
+        cy.get(`#${ ID.SEARCH_TEXT }`).should('have.text', '').type('{ENTER}')
+
+        checkForErrMsg()
+    })
+
+    it('should handle long search strings live', () => {
+        fillSearchInput(`${ longSearchText }{ENTER}`)
+
+        checkForErrMsg()
+    })
+     */
 })
