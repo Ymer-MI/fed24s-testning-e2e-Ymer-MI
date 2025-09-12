@@ -141,8 +141,7 @@ describe('Movie App', () => {
         cy.get(`#${ ID.MOVIE_CONTAINER } h3`).should('have.length.gt', 1).first().should('have.text', Titles.Z).parent().parent().find('h3').last().should('have.text', Titles.A)
     })
 
-    // Live tests to be uncommented/turned on later.
-    
+    // Test agains live API - be mindful of request limits. Turn off by wrapping in block comment while developing.
     it('should search for movies and display 10 movie cards live', () => {
         searchForLotR()
 
@@ -160,5 +159,4 @@ describe('Movie App', () => {
 
         checkForErrMsg()
     })
-    
 })
