@@ -1,4 +1,3 @@
-import { identity } from '../../node_modules/cypress/types/lodash/index'
 import Helpers from '../utilities/Helpers'
 
 enum ID {
